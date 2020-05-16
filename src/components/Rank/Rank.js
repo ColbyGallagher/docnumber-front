@@ -22,6 +22,7 @@ class Rank extends React.Component {
           doctype: "",
           discipline: "",
           docnumber: "",
+          docnumberstring: "",
           description: "",
           createdby: "",
           timecreated: "",
@@ -60,43 +61,80 @@ class Rank extends React.Component {
 
   onSubmitNumber = () => {
     this.loadAllDocNumbers();
-    fetch("http://localhost:3000/docnumbers", {
-      method: "post",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        projectnumber: this.state.projectNumber,
-        originator: this.state.originator,
-        volume: this.state.volume,
-        level: this.state.level,
-        doctype: this.state.doctype,
-        discipline: this.state.discipline,
-        description: this.state.description,
-        docnumber: this.state.docnumber,
-        createdby: this.props.name,
-        timecreated: this.state.timecreated,
-      }),
-    })
-      .then((response) => response.json())
-      .then((user) => this.props.onRouteChange("home"));
-    alert(
-      "The following document number was submitted successfully: " +
-        this.state.projectNumber +
-        "-" +
-        this.state.originator +
-        "-" +
-        this.state.volume +
-        "-" +
-        this.state.level +
-        "-" +
-        this.state.doctype +
-        "-" +
-        this.state.discipline +
-        "-" +
-        this.state.docnumber +
-        "-" +
-        this.state.description
+    var largestDocNumber = 0;
+    var newDocNumber = 0;
+    var newDocNumberString = "0001";
+    var i = 0;
+    for (i; i < this.state.data.length; i++) {
+      if (
+        (this.state.originator === this.state.data[i].originator) &
+        (this.state.volume === this.state.data[i].volume) &
+        (this.state.level === this.state.data[i].level) &
+        (this.state.doctype === this.state.data[i].doctype) &
+        (this.state.discipline === this.state.data[i].discipline)
+      ) {
+        largestDocNumber = this.state.data[i].docnumber;
+      }
+    }
+    console.log("largest", largestDocNumber);
+    newDocNumber = +largestDocNumber + 1;
+    if (newDocNumber > 999) {
+      newDocNumberString = newDocNumber;
+    } else if (newDocNumber > 99) {
+      newDocNumberString = "0" + newDocNumber;
+    } else if (newDocNumber > 9) {
+      newDocNumberString = "00" + newDocNumber;
+    } else {
+      newDocNumberString = "000" + newDocNumber;
+    }
+    console.log("newdocnumber string", newDocNumberString);
+    console.log("new", newDocNumber);
+    console.log("docnumber state before", this.state.docnumber);
+    // the fetch piece of code must run as a callback after the setState occurs since setState is Asynchronous and sometime won't unpdate before running the next line.
+    this.setState(
+      { docnumber: newDocNumber, docnumberstring: newDocNumberString },
+      () => {
+        console.log("docnumber state after", this.state.docnumber);
+        fetch("http://localhost:3000/docnumbers", {
+          method: "post",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            projectnumber: this.state.projectNumber,
+            originator: this.state.originator,
+            volume: this.state.volume,
+            level: this.state.level,
+            doctype: this.state.doctype,
+            discipline: this.state.discipline,
+            description: this.state.description,
+            docnumber: this.state.docnumber,
+            createdby: this.props.name,
+            timecreated: this.state.timecreated,
+            docnumberstring: this.state.docnumberstring,
+          }),
+        })
+          .then((response) => response.json())
+          .then((user) => this.props.onRouteChange("home"));
+        alert(
+          "The following document number was submitted successfully: " +
+            this.state.projectNumber +
+            "-" +
+            this.state.originator +
+            "-" +
+            this.state.volume +
+            "-" +
+            this.state.level +
+            "-" +
+            this.state.doctype +
+            "-" +
+            this.state.discipline +
+            "-" +
+            this.state.docnumberstring +
+            "-" +
+            this.state.description
+        );
+        this.loadAllDocNumbers();
+      }
     );
-    this.loadAllDocNumbers();
   };
 
   componentDidMount() {
@@ -107,7 +145,7 @@ class Rank extends React.Component {
       level: "XX",
       doctype: "SK",
       discipline: "S",
-      docnumber: "0001",
+      docnumber: 1,
     });
     this.loadAllDocNumbers();
   }
@@ -131,11 +169,13 @@ class Rank extends React.Component {
     var originator = this.state.originator;
     var i = 0;
     const items = [];
-    for (i; i < this.state.data.length; i++) {
-      if (originator === this.state.data[i].originator) {
-        items.push(
-          <p>{`Doc number: ${this.state.data[i].projectnumber}-${this.state.data[i].originator}-${this.state.data[i].volume}-${this.state.data[i].level}-${this.state.data[i].doctype}-${this.state.data[i].discipline}-${this.state.data[i].docnumber}-${this.state.data[i].description} ////  Created by: ${this.state.data[i].createdby}   ////    Time created: ${this.state.data[i].timecreated}`}</p>
-        );
+    if (this.state.data) {
+      for (i; i < this.state.data.length; i++) {
+        if (originator === this.state.data[i].originator) {
+          items.push(
+            <p>{`Doc number: ${this.state.data[i].projectnumber}-${this.state.data[i].originator}-${this.state.data[i].volume}-${this.state.data[i].level}-${this.state.data[i].doctype}-${this.state.data[i].discipline}-${this.state.data[i].docnumberstring}-${this.state.data[i].description} ////  Created by: ${this.state.data[i].createdby}   ////    Time created: ${this.state.data[i].timecreated}`}</p>
+          );
+        }
       }
     }
 
@@ -232,7 +272,7 @@ class Rank extends React.Component {
           <p>
             {this.state.projectNumber}-{this.state.originator}-
             {this.state.volume}-{this.state.level}-{this.state.doctype}-
-            {this.state.discipline}-{this.state.docnumber} -{" "}
+            {this.state.discipline}-{this.state.docnumberstring} -{" "}
             {this.state.description}
           </p>
         </div>
@@ -249,12 +289,13 @@ class Rank extends React.Component {
           value="Update doc numbers"
         />
 
-        {projectnumber.length > 0 && (
+        {
+          // projectnumber.length > 0 &&
           <div className="white f3">
             <p>{`Previous doc numbers`}</p>
             {items}
           </div>
-        )}
+        }
       </div>
     );
   }
