@@ -95,7 +95,7 @@ class Rank extends React.Component {
       { docnumber: newDocNumber, docnumberstring: newDocNumberString },
       () => {
         console.log("docnumber state after", this.state.docnumber);
-        fetch("http://localhost:3000/docnumbers", {
+        fetch("https://blooming-eyrie-16687.herokuapp.com/docnumbers", {
           method: "post",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -151,7 +151,7 @@ class Rank extends React.Component {
   }
 
   loadAllDocNumbers = () => {
-    fetch("http://localhost:3000/docnumbers")
+    fetch("https://blooming-eyrie-16687.herokuapp.com/docnumbers")
       .then((response) => response.json())
       .then((data) => {
         console.log(data);
